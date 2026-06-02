@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reinforcement Learning — Interactive Guide</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']], tags: 'ams' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+  --accent: #58a6ff; --accent2: #f78166; --accent3: #3fb950;
+  --accent4: #d2a8ff; --text: #e6edf3; --muted: #8b949e;
+  --border: #30363d; --gold: #e3b341;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; min-height: 100vh; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(13,17,23,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px; flex-wrap: wrap;
+}
+nav .logo { font-weight: 700; color: var(--accent); margin-right: 10px; white-space: nowrap; font-size: 1rem; }
+.nav-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.78rem;
+  transition: all .2s; white-space: nowrap;
+}
+.nav-btn:hover, .nav-btn.active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.nav-btn.active { font-weight: 600; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 90px 24px 60px; max-width: 860px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── HERO ── */
+.hero { text-align: center; padding: 60px 20px 40px; }
+.hero h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+.hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent4)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero p { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 32px; }
+.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  padding: 12px 28px; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all .2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #79b8ff; transform: translateY(-2px); }
+.btn-outline { background: none; border: 2px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── CARDS ── */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; margin: 24px 0; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; cursor: pointer; transition: all .2s;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(88,166,255,.15); }
+.card .icon { font-size: 2rem; margin-bottom: 10px; }
+.card h3 { font-size: 0.95rem; color: var(--text); margin-bottom: 6px; }
+.card p { font-size: 0.8rem; color: var(--muted); }
+
+/* ── SECTIONS ── */
+h2 { font-size: 1.8rem; font-weight: 700; margin: 32px 0 16px; color: var(--accent); }
+h3 { font-size: 1.2rem; font-weight: 600; margin: 24px 0 10px; color: var(--accent4); }
+h4 { font-size: 1rem; font-weight: 600; margin: 16px 0 8px; color: var(--accent3); }
+p { margin-bottom: 12px; }
+ul, ol { padding-left: 24px; margin-bottom: 12px; }
+li { margin-bottom: 6px; }
+
+/* ── HIGHLIGHT BOXES ── */
+.box {
+  border-radius: 10px; padding: 16px 20px; margin: 16px 0;
+  border-left: 4px solid;
+}
+.box-blue  { background: rgba(88,166,255,.08); border-color: var(--accent); }
+.box-red   { background: rgba(247,129,102,.08); border-color: var(--accent2); }
+.box-green { background: rgba(63,185,80,.08);  border-color: var(--accent3); }
+.box-purple{ background: rgba(210,168,255,.08); border-color: var(--accent4); }
+.box-gold  { background: rgba(227,179,65,.08);  border-color: var(--gold); }
+.box strong { display: block; margin-bottom: 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: .5px; opacity: .7; }
+
+/* ── EQUATIONS ── */
+.eq-block {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 20px; margin: 12px 0; overflow-x: auto; text-align: center; font-size: 1.05rem;
+}
+.eq-label { font-size: 0.75rem; color: var(--muted); display: block; margin-top: 6px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 4px; margin: 20px 0 0; border-bottom: 2px solid var(--border); flex-wrap: wrap; }
+.tab {
+  padding: 8px 18px; cursor: pointer; border-radius: 8px 8px 0 0;
+  background: none; border: none; color: var(--muted); font-size: 0.9rem; transition: all .2s;
+}
+.tab.active { background: var(--surface); color: var(--accent); font-weight: 600; }
+.tab-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 20px; }
+.tab-panel.active { display: block; }
+
+/* ── ACCORDION ── */
+.accordion { margin: 12px 0; }
+.acc-header {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 14px 18px; border-radius: 8px; cursor: pointer;
+  text-align: left; font-size: 0.95rem; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center; transition: all .2s;
+}
+.acc-header:hover { border-color: var(--accent); }
+.acc-header.open { border-radius: 8px 8px 0 0; border-color: var(--accent); color: var(--accent); }
+.acc-body { display: none; background: var(--surface2); border: 1px solid var(--accent); border-top: none; border-radius: 0 0 8px 8px; padding: 16px 18px; }
+.acc-body.open { display: block; }
+.chevron { transition: transform .2s; }
+.acc-header.open .chevron { transform: rotate(180deg); }
+
+/* ── QUIZ ── */
+.quiz-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0; }
+.quiz-box h4 { color: var(--gold); margin-bottom: 16px; font-size: 1rem; }
+.quiz-options { display: flex; flex-direction: column; gap: 10px; }
+.quiz-opt {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 16px; cursor: pointer; transition: all .2s; text-align: left; color: var(--text);
+}
+.quiz-opt:hover { border-color: var(--accent); }
+.quiz-opt.correct { background: rgba(63,185,80,.15); border-color: var(--accent3); color: var(--accent3); }
+.quiz-opt.wrong   { background: rgba(247,129,102,.15); border-color: var(--accent2); color: var(--accent2); }
+.quiz-feedback { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; display: none; }
+.quiz-feedback.show { display: block; }
+.quiz-feedback.ok  { background: rgba(63,185,80,.15); color: var(--accent3); }
+.quiz-feedback.bad { background: rgba(247,129,102,.15); color: var(--accent2); }
+
+/* ── COMPARISON TABLE ── */
+.cmp-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+.cmp-table th { background: var(--surface2); padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--accent); }
+.cmp-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.cmp-table tr:hover td { background: var(--surface); }
+
+/* ── STEP DIAGRAM ── */
+.steps { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 20px 0; }
+.step { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 12px 16px; text-align: center; flex: 1; min-width: 100px; }
+.step .s-icon { font-size: 1.5rem; }
+.step .s-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+.arrow { color: var(--accent); font-size: 1.4rem; padding: 0 4px; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar { background: var(--surface2); border-radius: 20px; height: 8px; margin: 8px 0 20px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--accent), var(--accent4)); transition: width .5s; }
+
+/* ── BADGE ── */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin: 3px; }
+.badge-blue   { background: rgba(88,166,255,.2); color: var(--accent); }
+.badge-red    { background: rgba(247,129,102,.2); color: var(--accent2); }
+.badge-green  { background: rgba(63,185,80,.2); color: var(--accent3); }
+.badge-purple { background: rgba(210,168,255,.2); color: var(--accent4); }
+
+/* ── GRID WORLD ── */
+#gridworld { display: grid; grid-template-columns: repeat(4, 60px); gap: 4px; margin: 16px auto; width: fit-content; }
+.cell {
+  width: 60px; height: 60px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: 1.4rem; font-weight: 700; cursor: pointer;
+  transition: all .3s; border: 2px solid var(--border); background: var(--surface2);
+}
+.cell.agent  { background: rgba(88,166,255,.3); border-color: var(--accent); }
+.cell.goal   { background: rgba(63,185,80,.3);  border-color: var(--accent3); }
+.cell.trap   { background: rgba(247,129,102,.3); border-color: var(--accent2); }
+.cell.wall   { background: var(--border); }
+.cell.visited{ background: rgba(210,168,255,.2); }
+#gw-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+#gw-info { text-align: center; color: var(--muted); font-size: 0.9rem; min-height: 24px; }
+
+/* ── EPSILON SLIDER ── */
+.slider-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.slider-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.slider-row span { min-width: 40px; color: var(--accent); font-weight: 600; }
+
+/* ── NEURAL NET VIZ ── */
+#nn-canvas { display: block; margin: 16px auto; border-radius: 10px; background: var(--surface2); }
+
+/* ── TIMELINE ── */
+.timeline { position: relative; padding-left: 32px; margin: 16px 0; }
+.timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.tl-item { position: relative; margin-bottom: 20px; }
+.tl-item::before { content: ''; position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.tl-item .tl-year { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+.tl-item .tl-title { font-weight: 600; margin: 2px 0; }
+.tl-item .tl-desc  { color: var(--muted); font-size: 0.88rem; }
+
+/* ── FOOTER ── */
+footer { text-align: center; padding: 40px 20px 20px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 60px; }
+
+/* ── UTILS ── */
+.mt-16 { margin-top: 16px; } .mb-16 { margin-bottom: 16px; }
+.text-center { text-align: center; }
+.highlight { color: var(--accent); font-weight: 600; }
+.emoji-big { font-size: 2rem; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px) {
+  .hero h1 { font-size: 2rem; }
+  nav { gap: 4px; padding: 8px 12px; }
+  .nav-btn { padding: 4px 8px; font-size: 0.72rem; }
+  #gridworld { grid-template-columns: repeat(4, 52px); }
+  .cell { width: 52px; height: 52px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav>
+  <div class="logo">🤖 RL Guide</div>
+  <button class="nav-btn active" onclick="goPage('home')">🏠 Home</button>
+  <button class="nav-btn" onclick="goPage('what-is-rl')">1. What is RL?</button>
+  <button class="nav-btn" onclick="goPage('mdp')">2. MDPs</button>
+  <button class="nav-btn" onclick="goPage('policy-value')">3. Policy &amp; Value</button>
+  <button class="nav-btn" onclick="goPage('bellman')">4. Bellman</button>
+  <button class="nav-btn" onclick="goPage('qlearning')">5. Q-Learning</button>
+  <button class="nav-btn" onclick="goPage('dqn')">6. DQN</button>
+  <button class="nav-btn" onclick="goPage('sarsa')">7. SARSA</button>
+  <button class="nav-btn" onclick="goPage('atari')">8. Atari &amp; Future</button>
+</nav>
+
+<!-- ═══════════════ PAGE: HOME ═══════════════ -->
+<div id="home" class="page active">
+  <div class="hero">
+    <h1>Reinforcement<br><span>Learning</span> — Interactive Guide</h1>
+    <p>KAUST Academy · Lectures 1 &amp; 2 · Everything you need to know, nothing left behind.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goPage('what-is-rl')">Start Learning →</button>
+      <button class="btn btn-outline" onclick="goPage('qlearning')">Jump to Q-Learning</button>
+    </div>
+  </div>
+
+  <div class="progress-bar" style="max-width:500px;margin:0 auto 32px;">
+    <div class="progress-fill" id="overall-progress" style="width:0%"></div>
+  </div>
+  <div class="text-center" style="color:var(--muted);font-size:.85rem;margin-bottom:32px;" id="progress-label">0 of 8 topics visited</div>
+
+  <div class="card-grid">
+    <div class="card" onclick="goPage('what-is-rl')"><div class="icon">🧠</div><h3>What is RL?</h3><p>Agent, environment, reward — the big picture</p></div>
+    <div class="card" onclick="goPage('mdp')"><div class="icon">🗺️</div><h3>MDPs</h3><p>Markov Decision Processes — the math of decisions</p></div>
+    <div class="card" onclick="goPage('policy-value')"><div class="icon">💎</div><h3>Policy &amp; Value</h3><p>How to measure "good" and what to do</p></div>
+    <div class="card" onclick="goPage('bellman')"><div class="icon">⚙️</div><h3>Bellman Equations</h3><p>The recursive heart of RL</p></div>
+    <div class="card" onclick="goPage('qlearning')"><div class="icon">📊</div><h3>Q-Learning</h3><p>Tabular learning + ε-greedy exploration</p></div>
+    <div class="card" onclick="goPage('dqn')"><div class="icon">🔬</div><h3>DQN</h3><p>Neural nets, replay buffers, target networks</p></div>
+    <div class="card" onclick="goPage('sarsa')"><div class="icon">🔄</div><h3>SARSA vs Q-Learning</h3><p>On-policy vs off-policy — what's the difference?</p></div>
+    <div class="card" onclick="goPage('atari')"><div class="icon">🕹️</div><h3>Atari &amp; Future</h3><p>Case study + where the field is going</p></div>
+  </div>
+
+  <div class="box box-blue">
+    <strong>📚 How to Use This Guide</strong>
+    Navigate with the top bar. Each page has <b>interactive demos</b>, <b>quizzes</b>, and <b>expandable deep-dives</b>. All equations are rendered with MathJax. Start from page 1 or jump to any topic.
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 1: WHAT IS RL ═══════════════ -->
+<div id="what-is-rl" class="page">
+  <h2>🧠 What is Reinforcement Learning?</h2>
+
+  <div class="box box-blue">
+    <strong>One-Line Definition</strong>
+    Reinforcement Learning is a machine learning paradigm where an <b>agent</b> learns to make decisions by <b>interacting with an environment</b>, receiving <b>rewards</b> as feedback, with the goal of maximizing cumulative reward over time.
+  </div>
+
+  <h3>The Agent–Environment Loop</h3>
+  <p>Every RL problem follows the same cycle. At each time step $t$:</p>
+
+  <div class="steps">
+    <div class="step"><div class="s-icon">👁️</div><div class="s-label">Observe state $s_t$</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s-icon">🎮</div><div class="s-label">Take action $a_t$</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s-icon">🌍</div><div class="s-label">Env transitions $s_{t+1}$</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="s-icon">🏆</div><div class="s-label">Receive reward $r_t$</div></div>
+  </div>
+
+  <p>This loop repeats until a terminal state is reached (episode ends). The agent's goal is to find a <b>policy</b> that maximizes $\sum_{t=0}^{\infty} \gamma^t r_t$.</p>
+
+  <h3>RL vs. Supervised Learning</h3>
+
+  <table class="cmp-table">
+    <tr><th>Aspect</th><th>Supervised Learning</th><th>Reinforcement Learning</th></tr>
+    <tr><td>Data</td><td>Labeled (x, y) pairs</td><td>Interaction trajectories</td></tr>
+    <tr><td>Feedback</td><td>Direct correct answer</td><td>Indirect reward signal</td></tr>
+    <tr><td>i.i.d.</td><td>✅ Assumed</td><td>❌ Data is sequential, correlated</td></tr>
+    <tr><td>Goal</td><td>Predict labels</td><td>Maximize cumulative reward</td></tr>
+    <tr><td>Exploration</td><td>Not needed</td><td>Essential (explore vs exploit)</td></tr>
+    <tr><td>Delayed feedback</td><td>No</td><td>Yes — actions affect future states</td></tr>
+  </table>
+
+  <div class="box box-red">
+    <strong>⚠️ Why RL is Different</strong>
+    In supervised learning, you're told the right answer immediately. In RL, you only get a reward — which might come <em>much later</em> and doesn't tell you <em>which</em> of your past actions caused it. This is the <b>credit assignment problem</b>.
+  </div>
+
+  <h3>Types of RL Algorithms</h3>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'tab-modelfree')">Model-Free</button>
+    <button class="tab" onclick="switchTab(this, 'tab-modelbased')">Model-Based</button>
+  </div>
+  <div class="tab-panel active" id="tab-modelfree">
+    <p>The agent does <b>not</b> learn or use a model of the environment. It learns directly from experience.</p>
+    <ul>
+      <li><b>Policy-Based:</b> Learn a policy $\pi(a|s)$ directly (e.g., REINFORCE, PPO, A3C)</li>
+      <li><b>Value-Based:</b> Learn a value function, derive policy from it (e.g., Q-Learning, DQN, SARSA)</li>
+      <li><b>Actor-Critic:</b> Combine both — actor (policy) + critic (value)</li>
+    </ul>
+    <p>Most practical algorithms (including those in these lectures) are <b>model-free</b>.</p>
+  </div>
+  <div class="tab-panel" id="tab-modelbased">
+    <p>The agent learns or is given a model of the environment: transition dynamics $P(s'|s,a)$ and reward function $R(s,a)$.</p>
+    <ul>
+      <li><b>Learn the model:</b> Fit $P$ and $R$ from data, then plan (e.g., Dyna-Q, World Models)</li>
+      <li><b>Given the model:</b> Use known dynamics to plan (e.g., AlphaGo, Monte Carlo Tree Search)</li>
+    </ul>
+    <p><b>Pro:</b> More sample-efficient. <b>Con:</b> Model errors propagate — "model bias".</p>
+  </div>
+
+  <h3>🌍 Real-World Applications</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">🚗</div><h3>Self-Driving Cars</h3><p>State: sensor data. Actions: steer, brake. Reward: safe navigation.</p></div>
+    <div class="card"><div class="icon">♟️</div><h3>Chess / Go</h3><p>AlphaZero mastered both from self-play alone.</p></div>
+    <div class="card"><div class="icon">📦</div><h3>Warehouse Robots</h3><p>Pick, place, and route optimization under uncertainty.</p></div>
+    <div class="card"><div class="icon">💰</div><h3>Portfolio Management</h3><p>State: market data. Actions: buy/sell. Reward: returns.</p></div>
+  </div>
+
+  <h3>Why is RL Hard?</h3>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">1. Large / Continuous State Spaces <span class="chevron">▼</span></button>
+    <div class="acc-body">A pixel-based game has $256^{84 \times 84 \times 3}$ possible states. A tabular table is impossible. We need <b>function approximation</b> (neural nets).</div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">2. Delayed / Sparse Rewards <span class="chevron">▼</span></button>
+    <div class="acc-body">In chess, reward comes at the end. The agent must figure out which of 50+ moves caused the win or loss — the classic credit assignment problem.</div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">3. Exploration vs. Exploitation <span class="chevron">▼</span></button>
+    <div class="acc-body">Should the agent stick to the best known action (exploit) or try something new that might be better (explore)? Too much exploration = never converges. Too little = local optima.</div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">4. Non-Stationary / Correlated Data <span class="chevron">▼</span></button>
+    <div class="acc-body">Unlike i.i.d. supervised data, RL samples are <b>temporally correlated</b>. As the policy changes, so does the data distribution. This breaks standard SGD assumptions.</div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">5. Unknown Environment Model <span class="chevron">▼</span></button>
+    <div class="acc-body">In model-free RL, $P(s'|s,a)$ and $R(s,a)$ are unknown. The agent must learn purely from trial and error, which is <b>sample-inefficient</b>.</div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">In Reinforcement Learning, the agent receives feedback in the form of:</p>
+    <div class="quiz-options" id="q1-opts">
+      <button class="quiz-opt" onclick="checkQ('q1',this,false)">Labeled correct actions for every state</button>
+      <button class="quiz-opt" onclick="checkQ('q1',this,true)">A scalar reward signal after taking actions</button>
+      <button class="quiz-opt" onclick="checkQ('q1',this,false)">A gradient telling it how to improve</button>
+      <button class="quiz-opt" onclick="checkQ('q1',this,false)">A supervised loss function</button>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-primary" onclick="goPage('mdp')">Next: MDPs →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 2: MDPs ═══════════════ -->
+<div id="mdp" class="page">
+  <h2>🗺️ Markov Decision Processes (MDPs)</h2>
+
+  <div class="box box-purple">
+    <strong>Formal Definition</strong>
+    An MDP is a tuple $\mathcal{M} = (\mathcal{S}, \mathcal{A}, R, P, \gamma)$ where every well-defined RL problem can be cast into this framework.
+  </div>
+
+  <h3>The Five Components</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">📍</div><h3>$\mathcal{S}$ — State Space</h3><p>All possible situations the agent can be in. Can be discrete (grid cells) or continuous (robot joint angles).</p></div>
+    <div class="card"><div class="icon">🎮</div><h3>$\mathcal{A}$ — Action Space</h3><p>All possible actions. Discrete: {up, down, left, right}. Continuous: torque values.</p></div>
+    <div class="card"><div class="icon">🏆</div><h3>$R$ — Reward Function</h3><p>$R(s,a)$ or $r_t \sim R(\cdot|s_t, a_t)$. Defines what the agent should maximize.</p></div>
+    <div class="card"><div class="icon">🎲</div><h3>$P$ — Transition Dynamics</h3><p>$P(s'|s,a)$ = probability of reaching $s'$ from $s$ after action $a$. Can be stochastic.</p></div>
+    <div class="card"><div class="icon">⏳</div><h3>$\gamma$ — Discount Factor</h3><p>$\gamma \in [0,1)$. Controls how much future rewards matter. $\gamma=0$: myopic. $\gamma \to 1$: far-sighted.</p></div>
+  </div>
+
+  <h3>The MDP Interaction Loop</h3>
+  <p>At each time step $t$, the process unfolds as:</p>
+  <ol>
+    <li>Initial state $s_0 \sim p(s_0)$ (sampled from initial distribution)</li>
+    <li>Agent selects action $a_t \sim \pi(\cdot | s_t)$</li>
+    <li>Environment samples reward $r_t \sim R(\cdot | s_t, a_t)$</li>
+    <li>Next state sampled: $s_{t+1} \sim P(\cdot | s_t, a_t)$</li>
+    <li>Repeat from step 2 until terminal state reached</li>
+  </ol>
+
+  <h3>The Markov Property</h3>
+  <div class="box box-gold">
+    <strong>Markov Property (Memorylessness)</strong>
+    The future is <b>conditionally independent</b> of the past given the present state:
+    $$P(s_{t+1} \mid s_t, a_t, s_{t-1}, a_{t-1}, \ldots) = P(s_{t+1} \mid s_t, a_t)$$
+    The current state $s_t$ contains <em>all</em> relevant information. You don't need history.
+  </div>
+
+  <p>This is what makes MDPs tractable — we only need to track the current state, not the entire trajectory.</p>
+
+  <h3>Discount Factor $\gamma$ — Intuition</h3>
+
+  <div class="box box-blue">
+    <strong>Why discount?</strong>
+    <ul style="margin-top:8px">
+      <li><b>Mathematical:</b> Makes infinite-horizon sums converge — $\sum_{t=0}^\infty \gamma^t r_t < \infty$ if $|r_t| \le R_{\max}$ and $\gamma < 1$</li>
+      <li><b>Economic:</b> A reward now is worth more than the same reward later (time value)</li>
+      <li><b>Uncertainty:</b> Future rewards are less certain; discounting reflects this</li>
+    </ul>
+  </div>
+
+  <div class="eq-block">
+    $$G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k} = r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \ldots$$
+    <span class="eq-label">Return $G_t$ — the discounted cumulative reward from time $t$</span>
+  </div>
+
+  <h3>🎮 Interactive Grid World</h3>
+  <p style="color:var(--muted);font-size:.9rem">A classic MDP example. Agent (<span style="color:var(--accent)">🤖</span>) must reach goal (<span style="color:var(--accent3)">🏆</span>) and avoid traps (<span style="color:var(--accent2)">💥</span>). Click arrows to move, or use keyboard arrows.</p>
+
+  <div id="gridworld"></div>
+  <div id="gw-controls">
+    <button class="btn btn-outline" onclick="gwMove('up')">⬆️ Up</button>
+    <button class="btn btn-outline" onclick="gwMove('left')">⬅️ Left</button>
+    <button class="btn btn-outline" onclick="gwMove('down')">⬇️ Down</button>
+    <button class="btn btn-outline" onclick="gwMove('right')">➡️ Right</button>
+    <button class="btn btn-outline" onclick="gwReset()">🔄 Reset</button>
+  </div>
+  <div id="gw-info">Step: 0 | Cumulative Reward: 0</div>
+  <div id="gw-log" style="background:var(--surface2);border-radius:8px;padding:10px;font-size:.8rem;color:var(--muted);min-height:48px;margin-top:8px;max-height:80px;overflow-y:auto;"></div>
+
+  <h3>Real-World MDP Formulations</h3>
+
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">♟️ Chess as an MDP <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      <b>State:</b> Board position (piece placements). <b>Action:</b> Legal moves (~30 avg). <b>Reward:</b> +1 win, -1 loss, 0 draw. <b>Transition:</b> Deterministic (opponent's move is part of environment). <b>γ:</b> 1 (episode ends).
+    </div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">🚗 Self-Driving as an MDP <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      <b>State:</b> Camera + LiDAR + GPS + speed (continuous, high-dimensional). <b>Action:</b> Steering angle, throttle, brake (continuous). <b>Reward:</b> +safety, +speed, -collision, -lane violation. <b>Transition:</b> Stochastic (other drivers, weather).
+    </div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">💰 Portfolio Management as an MDP <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      <b>State:</b> Market prices, holdings, indicators. <b>Action:</b> Buy/sell percentages of each asset. <b>Reward:</b> Portfolio return (possibly risk-adjusted). <b>Transition:</b> Highly stochastic market dynamics.
+    </div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">The Markov Property means:</p>
+    <div class="quiz-options" id="q2-opts">
+      <button class="quiz-opt" onclick="checkQ('q2',this,false)">The agent needs to remember the full history to make decisions</button>
+      <button class="quiz-opt" onclick="checkQ('q2',this,true)">The future depends only on the current state, not past states</button>
+      <button class="quiz-opt" onclick="checkQ('q2',this,false)">All states have equal probability of transition</button>
+      <button class="quiz-opt" onclick="checkQ('q2',this,false)">Rewards are always immediate and deterministic</button>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('what-is-rl')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('policy-value')">Next: Policy &amp; Value →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 3: POLICY & VALUE ═══════════════ -->
+<div id="policy-value" class="page">
+  <h2>💎 Policy &amp; Value Functions</h2>
+
+  <h3>What is a Policy?</h3>
+  <p>A <b>policy</b> $\pi$ maps states to actions — it's the agent's decision-making strategy.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'tab-determ')">Deterministic Policy</button>
+    <button class="tab" onclick="switchTab(this, 'tab-stoch')">Stochastic Policy</button>
+  </div>
+  <div class="tab-panel active" id="tab-determ">
+    <div class="eq-block">$$\pi(s) = a$$<span class="eq-label">Always take the same action in each state</span></div>
+    <p>Example: Always go right in state 3. Simple, but inflexible — can't mix strategies.</p>
+  </div>
+  <div class="tab-panel" id="tab-stoch">
+    <div class="eq-block">$$\pi(a|s) = \Pr(a_t = a \mid s_t = s)$$<span class="eq-label">A probability distribution over actions given state</span></div>
+    <p>Example: In state 3, go right with prob 0.7, go up with prob 0.3. More expressive — allows randomization which can be optimal in adversarial or partially-observable settings.</p>
+  </div>
+
+  <h3>The Optimal Policy</h3>
+  <div class="box box-gold">
+    <strong>Goal of RL</strong>
+    Find the policy $\pi^*$ that maximizes expected discounted return:
+    $$\pi^* = \arg\max_{\pi} \; \mathbb{E}\!\left[\sum_{t=0}^{\infty} \gamma^t r_t \;\Big|\; \pi\right]$$
+  </div>
+
+  <h3>State Value Function $V^\pi(s)$</h3>
+  <p>How good is it to be in state $s$ when following policy $\pi$?</p>
+  <div class="eq-block">
+    $$V^\pi(s) = \mathbb{E}_\pi\!\left[\sum_{t=0}^{\infty} \gamma^t r_t \;\Big|\; s_0 = s\right]$$
+    <span class="eq-label">Expected return starting from state $s$, following $\pi$ forever</span>
+  </div>
+
+  <h3>Action-Value (Q) Function $Q^\pi(s,a)$</h3>
+  <p>How good is it to take action $a$ in state $s$, <em>then</em> follow $\pi$?</p>
+  <div class="eq-block">
+    $$Q^\pi(s,a) = \mathbb{E}_\pi\!\left[\sum_{t=0}^{\infty} \gamma^t r_t \;\Big|\; s_0 = s,\; a_0 = a\right]$$
+    <span class="eq-label">Expected return starting from $s$, taking $a$ first, then following $\pi$</span>
+  </div>
+
+  <div class="box box-green">
+    <strong>🔗 Relationship between V and Q</strong>
+    $$V^\pi(s) = \sum_{a} \pi(a|s)\, Q^\pi(s,a)$$
+    The state value is the <em>expectation</em> of Q-values under the policy's action distribution.
+  </div>
+
+  <h3>Why Q-Functions are More Useful for Control</h3>
+  <div class="box box-blue">
+    <strong>Key Insight</strong>
+    If you know $Q^*(s,a)$ — the <em>optimal</em> Q-function — you can immediately extract the optimal policy without knowing the environment dynamics:
+    $$\pi^*(s) = \arg\max_{a} Q^*(s,a)$$
+    This is why Q-learning is so powerful: learn $Q^*$, get $\pi^*$ for free!
+  </div>
+
+  <h3>Optimal Value Functions</h3>
+  <div class="eq-block">
+    $$V^*(s) = \max_\pi V^\pi(s) = \max_a Q^*(s,a)$$
+  </div>
+  <div class="eq-block">
+    $$Q^*(s,a) = \max_\pi Q^\pi(s,a)$$
+  </div>
+
+  <h3>Visualizing Value Functions — Grid World</h3>
+  <p style="color:var(--muted);font-size:.9rem">A random policy wanders aimlessly; an optimal policy uses value estimates to navigate efficiently.</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:16px 0;">
+    <div style="text-align:center">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:8px">🎲 Random Policy</p>
+      <div id="vf-random"></div>
+    </div>
+    <div style="text-align:center">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:8px">⭐ Optimal Policy</p>
+      <div id="vf-optimal"></div>
+    </div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">Given the optimal Q-function $Q^*(s,a)$, what is the optimal policy?</p>
+    <div class="quiz-options" id="q3-opts">
+      <button class="quiz-opt" onclick="checkQ('q3',this,false)">$\pi^*(s) = \sum_a Q^*(s,a)$</button>
+      <button class="quiz-opt" onclick="checkQ('q3',this,true)">$\pi^*(s) = \arg\max_a Q^*(s,a)$</button>
+      <button class="quiz-opt" onclick="checkQ('q3',this,false)">$\pi^*(s) = \min_a Q^*(s,a)$</button>
+      <button class="quiz-opt" onclick="checkQ('q3',this,false)">$\pi^*(s) = \mathbb{E}[Q^*(s,a)]$</button>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('mdp')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('bellman')">Next: Bellman Equations →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 4: BELLMAN ═══════════════ -->
+<div id="bellman" class="page">
+  <h2>⚙️ Bellman Equations</h2>
+
+  <div class="box box-purple">
+    <strong>Core Idea</strong>
+    The Bellman equations express value functions <b>recursively</b> — the value of a state equals the immediate reward plus the discounted value of the next state. This recursive structure is the backbone of almost every RL algorithm.
+  </div>
+
+  <h3>Bellman Expectation Equation for $V^\pi$</h3>
+  <div class="eq-block">
+    $$V^\pi(s) = \sum_a \pi(a|s) \sum_{s'} P(s'|s,a)\Big[R(s,a) + \gamma V^\pi(s')\Big]$$
+    <span class="eq-label">Value of $s$ = expected (immediate reward + discounted next value)</span>
+  </div>
+
+  <h3>Bellman Expectation Equation for $Q^\pi$</h3>
+  <div class="eq-block">
+    $$Q^\pi(s,a) = R(s,a) + \gamma \sum_{s'} P(s'|s,a) \sum_{a'} \pi(a'|s')\, Q^\pi(s',a')$$
+    <span class="eq-label">Q-value of $(s,a)$ = reward + discounted expected Q-value of next step under $\pi$</span>
+  </div>
+
+  <h3>Bellman Optimality Equation for $V^*$</h3>
+  <div class="eq-block">
+    $$V^*(s) = \max_a \left[R(s,a) + \gamma \sum_{s'} P(s'|s,a) V^*(s')\right]$$
+    <span class="eq-label">Optimal value = take the best action and then follow the optimal policy</span>
+  </div>
+
+  <h3>Bellman Optimality Equation for $Q^*$</h3>
+  <div class="box box-gold">
+    <strong>The Most Important Equation in These Lectures</strong>
+    $$Q^*(s,a) = R(s,a) + \gamma \, \mathbb{E}_{s' \sim P(\cdot|s,a)}\!\left[\max_{a'} Q^*(s',a')\right]$$
+    This is what Q-learning and DQN are trying to satisfy.
+  </div>
+
+  <h3>Recursive Structure — Illustrated</h3>
+  <p>The Bellman equation says: <em>"the value here equals what I get now, plus the best I can do from wherever I end up."</em></p>
+
+  <div style="background:var(--surface2);border-radius:10px;padding:20px;margin:16px 0;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:.9rem;">
+      <div style="background:rgba(88,166,255,.15);border:1px solid var(--accent);border-radius:8px;padding:10px 16px;text-align:center;">
+        <div style="color:var(--accent);font-weight:600;">$Q^*(s, a)$</div>
+        <div style="color:var(--muted);font-size:.78rem;">Q-value now</div>
+      </div>
+      <div style="color:var(--text);font-size:1.2rem;">=</div>
+      <div style="background:rgba(63,185,80,.15);border:1px solid var(--accent3);border-radius:8px;padding:10px 16px;text-align:center;">
+        <div style="color:var(--accent3);font-weight:600;">$R(s,a)$</div>
+        <div style="color:var(--muted);font-size:.78rem;">Immediate reward</div>
+      </div>
+      <div style="color:var(--text);font-size:1.2rem;">+</div>
+      <div style="background:rgba(210,168,255,.15);border:1px solid var(--accent4);border-radius:8px;padding:10px 16px;text-align:center;">
+        <div style="color:var(--accent4);font-weight:600;">$\gamma \cdot \max_{a'} Q^*(s', a')$</div>
+        <div style="color:var(--muted);font-size:.78rem;">Discounted future value</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Solving Bellman Equations</h3>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">Method 1: Dynamic Programming (requires model) <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      If you know $P(s'|s,a)$ and $R(s,a)$, you can iteratively solve the Bellman equations:
+      <ul>
+        <li><b>Policy Evaluation:</b> Compute $V^\pi$ by iterating until convergence</li>
+        <li><b>Policy Improvement:</b> Update $\pi$ to be greedy w.r.t. current $V^\pi$</li>
+        <li><b>Value Iteration:</b> Directly compute $V^*$ by iterating the Bellman optimality equation</li>
+      </ul>
+      Not applicable in model-free settings (we don't know $P$ and $R$).
+    </div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">Method 2: Q-Learning (model-free) <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      Use sampled transitions $(s, a, r, s')$ to iteratively update Q-estimates:
+      $$Q(s,a) \leftarrow Q(s,a) + \alpha\Big[r + \gamma \max_{a'} Q(s',a') - Q(s,a)\Big]$$
+      The term in brackets is the <b>Temporal Difference (TD) error</b> — how far the current estimate is from what it "should" be per the Bellman equation.
+    </div>
+  </div>
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">Method 3: Deep Q-Networks (neural net + Q-learning) <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      Use a neural network $Q(s,a;\theta)$ to approximate the Q-function, and minimize the Bellman residual as a loss:
+      $$\mathcal{L}(\theta) = \mathbb{E}\!\left[\Big(r + \gamma \max_{a'} Q(s',a';\theta) - Q(s,a;\theta)\Big)^2\right]$$
+      More on this in the DQN section!
+    </div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">The Bellman Optimality Equation for $Q^*$ uses $\max_{a'}$ because:</p>
+    <div class="quiz-options" id="q4-opts">
+      <button class="quiz-opt" onclick="checkQ('q4',this,false)">It averages over all possible future actions</button>
+      <button class="quiz-opt" onclick="checkQ('q4',this,true)">The optimal policy always selects the best available action</button>
+      <button class="quiz-opt" onclick="checkQ('q4',this,false)">It accounts for stochastic rewards</button>
+      <button class="quiz-opt" onclick="checkQ('q4',this,false)">It makes the equation easier to solve</button>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('policy-value')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('qlearning')">Next: Q-Learning →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 5: Q-LEARNING ═══════════════ -->
+<div id="qlearning" class="page">
+  <h2>📊 Q-Learning</h2>
+
+  <div class="box box-blue">
+    <strong>What is Q-Learning?</strong>
+    Q-Learning (Watkins, 1989) is a <b>model-free, off-policy, value-based</b> RL algorithm that directly learns the optimal action-value function $Q^*(s,a)$ from experience, without needing a model of the environment.
+  </div>
+
+  <h3>The Q-Learning Update Rule</h3>
+  <div class="eq-block">
+    $$Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \underbrace{\Big[r_t + \gamma \max_{a'} Q(s_{t+1}, a') - Q(s_t, a_t)\Big]}_{\text{TD Error } \delta_t}$$
+    <span class="eq-label">Where $\alpha \in (0,1]$ is the learning rate</span>
+  </div>
+
+  <div class="box box-green">
+    <strong>Breaking Down the Update</strong>
+    <ul style="margin-top:8px">
+      <li><b>$Q(s_t,a_t)$</b> — current estimate we're updating</li>
+      <li><b>$r_t + \gamma \max_{a'} Q(s_{t+1},a')$</b> — the "target" (what Q should be, per Bellman)</li>
+      <li><b>TD Error $\delta_t$</b> — the gap between target and current estimate</li>
+      <li><b>$\alpha$</b> — how fast we move toward the target (step size)</li>
+    </ul>
+  </div>
+
+  <h3>ε-Greedy Exploration</h3>
+  <p>How does the agent decide which action to take during learning?</p>
+
+  <div class="eq-block">
+    $$a_t = \begin{cases} \text{random action} & \text{with probability } \varepsilon \\ \arg\max_{a} Q(s_t, a) & \text{with probability } 1 - \varepsilon \end{cases}$$
+  </div>
+
+  <div class="slider-row">
+    <label style="color:var(--muted);font-size:.9rem;white-space:nowrap;">Explore (ε):</label>
+    <input type="range" min="0" max="100" value="30" id="eps-slider" oninput="updateEpsViz()">
+    <span id="eps-val">0.30</span>
+  </div>
+  <div id="eps-viz" style="display:flex;gap:4px;height:40px;border-radius:8px;overflow:hidden;margin:8px 0;"></div>
+  <p id="eps-desc" style="color:var(--muted);font-size:.85rem;"></p>
+
+  <h3>Q-Learning Algorithm</h3>
+  <div style="background:var(--surface2);border-radius:10px;padding:20px;font-family:monospace;font-size:.85rem;line-height:1.8;margin:16px 0;border:1px solid var(--border);">
+    <div style="color:var(--accent4);font-weight:600;">Algorithm: Q-Learning</div>
+    <div style="margin-top:8px">
+      <span style="color:var(--muted)">1.</span> Initialize $Q(s,a) = 0$ for all $s \in \mathcal{S},\, a \in \mathcal{A}$<br>
+      <span style="color:var(--muted)">2.</span> <span style="color:var(--accent)">For</span> each episode:<br>
+      &nbsp;&nbsp;<span style="color:var(--muted)">3.</span> Initialize $s_0$<br>
+      &nbsp;&nbsp;<span style="color:var(--muted)">4.</span> <span style="color:var(--accent)">For</span> each step $t = 0, 1, 2, \ldots$:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">5.</span> Select $a_t$ via ε-greedy w.r.t. $Q(s_t, \cdot)$<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">6.</span> Execute $a_t$, observe $r_t$, $s_{t+1}$<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">7.</span> $Q(s_t,a_t) \leftarrow Q(s_t,a_t) + \alpha\big[r_t + \gamma\max_{a'}Q(s_{t+1},a') - Q(s_t,a_t)\big]$<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">8.</span> $s_t \leftarrow s_{t+1}$<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">9.</span> <span style="color:var(--accent)">Until</span> $s_t$ is terminal
+    </div>
+  </div>
+
+  <h3>Why "Off-Policy"?</h3>
+  <div class="box box-purple">
+    <strong>Off-Policy Explained</strong>
+    Q-Learning is <b>off-policy</b> because it uses $\max_{a'} Q(s',a')$ in the target — this assumes the optimal action will be taken in the future — but the agent might actually be taking a <em>random</em> action (due to ε-greedy). It learns the <em>optimal policy</em> while <em>behaving differently</em>. This means it can reuse old experience!
+  </div>
+
+  <h3>Convergence Guarantee</h3>
+  <p>Q-Learning converges to $Q^*$ with probability 1 if:</p>
+  <ul>
+    <li>All state-action pairs are visited <b>infinitely often</b> (sufficient exploration)</li>
+    <li>The learning rate $\alpha_t$ decays: $\sum_t \alpha_t = \infty$ and $\sum_t \alpha_t^2 < \infty$</li>
+    <li>The MDP is <b>finite</b> (finite $\mathcal{S}$ and $\mathcal{A}$)</li>
+    <li>Rewards are bounded</li>
+  </ul>
+
+  <h3>Limitations of Tabular Q-Learning</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">📏</div><h3>Scalability</h3><p>Stores one value per $(s,a)$ pair. With $10^6$ states × 18 actions = 18M entries. With pixels: impossible.</p></div>
+    <div class="card"><div class="icon">🐢</div><h3>Sample Inefficiency</h3><p>Needs many episodes to visit all states enough times. Real-world environments are expensive to sample.</p></div>
+    <div class="card"><div class="icon">🧩</div><h3>No Generalization</h3><p>Learning $(s,a)$ tells you nothing about similar $(s',a')$. No transfer between states.</p></div>
+    <div class="card"><div class="icon">⚡</div><h3>Instability w/ Func. Approx.</h3><p>When $Q$ is a neural net, correlations + non-stationarity cause divergence. Solution: DQN tricks.</p></div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">In the Q-Learning update, the term $r_t + \gamma \max_{a'} Q(s_{t+1}, a')$ is called:</p>
+    <div class="quiz-options" id="q5-opts">
+      <button class="quiz-opt" onclick="checkQ('q5',this,false)">The exploration bonus</button>
+      <button class="quiz-opt" onclick="checkQ('q5',this,true)">The TD target (bootstrap target)</button>
+      <button class="quiz-opt" onclick="checkQ('q5',this,false)">The policy gradient</button>
+      <button class="quiz-opt" onclick="checkQ('q5',this,false)">The Bellman residual</button>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('bellman')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('dqn')">Next: DQN →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 6: DQN ═══════════════ -->
+<div id="dqn" class="page">
+  <h2>🔬 Deep Q-Network (DQN)</h2>
+
+  <div class="box box-blue">
+    <strong>The Problem Q-Learning Can't Solve</strong>
+    An Atari game has pixel-based states: $84 \times 84 \times 4$ grayscale frames = 28,224-dimensional input. A tabular Q-table is completely infeasible. We need to <b>generalize</b> across similar states.
+  </div>
+
+  <h3>Function Approximation</h3>
+  <p>Replace the Q-table with a parametric function — a neural network:</p>
+  <div class="eq-block">
+    $$Q(s, a;\, \theta) \approx Q^*(s, a)$$
+    <span class="eq-label">$\theta$ = neural network weights. Same network, different outputs for each action $a$.</span>
+  </div>
+
+  <h3>The DQN Loss Function</h3>
+  <div class="eq-block">
+    $$\mathcal{L}(\theta) = \mathbb{E}_{(s,a) \sim \mathcal{D}}\!\left[\left(y - Q(s,a;\theta)\right)^2\right]$$
+    <span class="eq-label">Mean squared error between current Q-estimate and the target $y$</span>
+  </div>
+  <div class="eq-block">
+    $$y = \mathbb{E}\!\left[r + \gamma \max_{a'} Q(s', a';\, \theta)\right]$$
+    <span class="eq-label">Bootstrap target (same form as Bellman optimality equation)</span>
+  </div>
+
+  <h3>DQN Gradient</h3>
+  <div class="eq-block">
+    $$\nabla_\theta \mathcal{L}(\theta) = \mathbb{E}\!\left[\Big(r + \gamma \max_{a'} Q(s',a';\theta) - Q(s,a;\theta)\Big) \nabla_\theta Q(s,a;\theta)\right]$$
+    <span class="eq-label">Gradient of loss w.r.t. network weights — used to update $\theta$ via SGD</span>
+  </div>
+
+  <div class="box box-red">
+    <strong>⚠️ Naive DQN Has Two Fatal Problems</strong>
+    <ol style="margin-top:8px">
+      <li><b>Correlated samples:</b> Consecutive transitions $(s_t,a_t,r_t,s_{t+1}), (s_{t+1},\ldots)$ are highly correlated → breaks SGD assumptions → unstable training</li>
+      <li><b>Non-stationary targets:</b> Both $Q(s,a;\theta)$ and $\max Q(s',a';\theta)$ use the <em>same</em> network — as we update $\theta$, the target moves too. Like a dog chasing its own tail!</li>
+    </ol>
+  </div>
+
+  <h3>Fix 1: Experience Replay 🎲</h3>
+  <div class="box box-green">
+    <strong>Idea</strong>
+    Maintain a <b>replay buffer</b> $\mathcal{D}$ storing past transitions $(s_t, a_t, r_t, s_{t+1})$. During training, sample random <b>mini-batches</b> from $\mathcal{D}$ instead of using consecutive transitions.
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'tab-er-why')">Why it works</button>
+    <button class="tab" onclick="switchTab(this, 'tab-er-how')">How it's implemented</button>
+  </div>
+  <div class="tab-panel active" id="tab-er-why">
+    <ul>
+      <li><b>Breaks correlations:</b> Random sampling destroys temporal correlations between consecutive samples</li>
+      <li><b>Data efficiency:</b> Each transition can be used multiple times for training</li>
+      <li><b>Stabilizes training:</b> Mini-batch SGD works as intended on approximately i.i.d. data</li>
+    </ul>
+  </div>
+  <div class="tab-panel" id="tab-er-how">
+    <ul>
+      <li>Buffer size: typically 1M transitions (for Atari)</li>
+      <li>FIFO: oldest transitions overwritten when buffer is full</li>
+      <li>Mini-batch size: typically 32 or 64</li>
+      <li>Start training only after buffer has $\geq$ min_buffer_size transitions</li>
+    </ul>
+  </div>
+
+  <h3>Fix 2: Target Network 🎯</h3>
+  <div class="box box-purple">
+    <strong>Idea</strong>
+    Maintain a <b>separate target network</b> $\hat{Q}(s,a;\theta^-)$ with parameters $\theta^-$ that are updated less frequently. The training target becomes:
+    $$y_j = r_j + \gamma \max_{a'} \hat{Q}(s_j', a';\, \theta^-)$$
+    Every $C$ steps, copy $\theta \rightarrow \theta^-$. Between updates, $\theta^-$ is frozen.
+  </div>
+
+  <div class="accordion">
+    <button class="acc-header" onclick="toggleAcc(this)">Why does a frozen target help? <span class="chevron">▼</span></button>
+    <div class="acc-body">
+      Without target network: every gradient update changes both $Q(s,a;\theta)$ <em>and</em> the target $\max Q(s',a';\theta)$ — they're coupled. The target "moves" with every update, making it impossible to converge.<br><br>
+      With target network: the target is <b>fixed for $C$ steps</b>. Now we're fitting $Q(s,a;\theta)$ toward a stable target. More like supervised learning → much more stable.
+    </div>
+  </div>
+
+  <h3>Full DQN Algorithm (Mnih et al., Nature 2015)</h3>
+  <div style="background:var(--surface2);border-radius:10px;padding:20px;font-family:monospace;font-size:.82rem;line-height:1.9;margin:16px 0;border:1px solid var(--border);">
+    <div style="color:var(--accent4);font-weight:600;margin-bottom:8px;">Algorithm: Deep Q-Network (DQN)</div>
+    <span style="color:var(--muted)">1.</span> Initialize replay buffer $\mathcal{D}$ (capacity $N$)<br>
+    <span style="color:var(--muted)">2.</span> Initialize Q-network $Q(s,a;\theta)$ with random weights $\theta$<br>
+    <span style="color:var(--muted)">3.</span> Initialize target network $\hat{Q}$ with $\theta^- \leftarrow \theta$<br>
+    <span style="color:var(--muted)">4.</span> <span style="color:var(--accent)">For</span> episode $= 1, M$ <span style="color:var(--accent)">do</span>:<br>
+    &nbsp;&nbsp;<span style="color:var(--muted)">5.</span> Initialize state $s_1$, preprocess $\phi_1 = \phi(s_1)$<br>
+    &nbsp;&nbsp;<span style="color:var(--muted)">6.</span> <span style="color:var(--accent)">For</span> $t = 1, T$ <span style="color:var(--accent)">do</span>:<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">7.</span> With prob $\varepsilon$: select random $a_t$; else $a_t = \arg\max_a Q(\phi_t, a; \theta)$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">8.</span> Execute $a_t$, observe $r_t$, $s_{t+1}$; set $\phi_{t+1} = \phi(s_{t+1})$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">9.</span> Store $(\phi_t, a_t, r_t, \phi_{t+1})$ in $\mathcal{D}$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">10.</span> Sample random mini-batch $\{(\phi_j, a_j, r_j, \phi_{j+1})\}$ from $\mathcal{D}$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">11.</span> Set $y_j = r_j$ if terminal; else $y_j = r_j + \gamma \max_{a'} \hat{Q}(\phi_{j+1}, a'; \theta^-)$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">12.</span> Gradient descent on $\big(y_j - Q(\phi_j, a_j; \theta)\big)^2$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">13.</span> Every $C$ steps: $\theta^- \leftarrow \theta$
+  </div>
+
+  <h3>Fix 3: Double DQN (DDQN) 🎯🎯</h3>
+  <div class="box box-red">
+    <strong>Problem: Maximization Bias</strong>
+    Standard DQN uses $\max_{a'} \hat{Q}(s',a';\theta^-)$ as target. Using $\max$ over <em>noisy</em> Q-estimates is systematically optimistic — it always picks the highest value, which tends to be overestimated noise. This leads to <b>overestimation of Q-values</b>.
+  </div>
+
+  <div class="box box-green">
+    <strong>Solution: Decouple Selection and Evaluation</strong>
+    <ul style="margin-top:8px">
+      <li><b>Selection:</b> Use the <em>current</em> network $\theta$ to pick the best action: $a^* = \arg\max_{a'} Q(s', a'; \theta)$</li>
+      <li><b>Evaluation:</b> Use the <em>target</em> network $\theta^-$ to evaluate that action</li>
+    </ul>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'tab-dqn-target')">DQN Target</button>
+    <button class="tab" onclick="switchTab(this, 'tab-ddqn-target')">Double DQN Target</button>
+  </div>
+  <div class="tab-panel active" id="tab-dqn-target">
+    <div class="eq-block">
+      $$y_j = r_j + \gamma \max_{a'} \hat{Q}(s_j', a';\, \theta^-)$$
+      <span class="eq-label">Same network selects AND evaluates the best action → overestimation bias</span>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-ddqn-target">
+    <div class="eq-block">
+      $$y_j = r_j + \gamma \, Q\!\left(s_j',\; \underbrace{\arg\max_{a'} Q(s_j', a';\, \theta)}_{\text{select with } \theta};\; \underbrace{\theta^-}_{\text{evaluate with } \theta^-}\right)$$
+      <span class="eq-label">Current network selects best action; target network evaluates it → unbiased</span>
+    </div>
+  </div>
+
+  <h3>DQN Architecture — Neural Network</h3>
+  <canvas id="nn-canvas" width="600" height="200"></canvas>
+  <p style="text-align:center;color:var(--muted);font-size:.8rem;">Simplified DQN architecture: pixels → Conv layers → FC → Q-values per action</p>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">Experience Replay in DQN primarily solves which problem?</p>
+    <div class="quiz-options" id="q6-opts">
+      <button class="quiz-opt" onclick="checkQ('q6',this,false)">Non-stationary targets</button>
+      <button class="quiz-opt" onclick="checkQ('q6',this,true)">Correlated consecutive training samples</button>
+      <button class="quiz-opt" onclick="checkQ('q6',this,false)">Maximization bias in Q-values</button>
+      <button class="quiz-opt" onclick="checkQ('q6',this,false)">Vanishing gradients in deep networks</button>
+    </div>
+    <div class="quiz-feedback" id="q6-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('qlearning')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('sarsa')">Next: SARSA →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 7: SARSA ═══════════════ -->
+<div id="sarsa" class="page">
+  <h2>🔄 SARSA vs. Q-Learning</h2>
+
+  <h3>On-Policy vs. Off-Policy</h3>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'tab-offpol')">Off-Policy (Q-Learning, DQN)</button>
+    <button class="tab" onclick="switchTab(this, 'tab-onpol')">On-Policy (SARSA)</button>
+  </div>
+  <div class="tab-panel active" id="tab-offpol">
+    <div class="box box-blue" style="margin:0">
+      <strong>Off-Policy</strong>
+      The agent learns about one policy (the <b>target policy</b>) while behaving according to a different policy (the <b>behavior policy</b>).<br><br>
+      In Q-Learning: <em>target policy</em> = greedy $\arg\max Q$; <em>behavior policy</em> = ε-greedy.<br><br>
+      <b>Key property:</b> Can reuse old data collected under any policy. Can learn from demonstrations. More aggressive / goal-seeking.
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-onpol">
+    <div class="box box-green" style="margin:0">
+      <strong>On-Policy</strong>
+      The agent learns about the <em>same</em> policy it is currently following. Target and behavior policy are identical.<br><br>
+      In SARSA: the update uses the action <em>actually taken</em> next ($a'$), not the greedy best action.<br><br>
+      <b>Key property:</b> Learns a safer policy because it accounts for its own exploration behavior.
+    </div>
+  </div>
+
+  <h3>SARSA — State, Action, Reward, State, Action</h3>
+  <p>SARSA gets its name from the tuple it uses for each update: $(s_t, a_t, r_t, s_{t+1}, a_{t+1})$</p>
+
+  <div class="eq-block">
+    $$Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha\Big[r_t + \gamma Q(s_{t+1}, a_{t+1}) - Q(s_t, a_t)\Big]$$
+    <span class="eq-label">Uses the <em>actual</em> next action $a_{t+1}$ — not $\max$!</span>
+  </div>
+
+  <div style="background:var(--surface2);border-radius:10px;padding:20px;font-family:monospace;font-size:.82rem;line-height:1.9;margin:16px 0;border:1px solid var(--border);">
+    <div style="color:var(--accent4);font-weight:600;margin-bottom:8px;">Algorithm: SARSA</div>
+    <span style="color:var(--muted)">1.</span> Initialize $Q(s,a) = 0$ for all $s, a$<br>
+    <span style="color:var(--muted)">2.</span> <span style="color:var(--accent)">For</span> each episode:<br>
+    &nbsp;&nbsp;<span style="color:var(--muted)">3.</span> Initialize $s_0$; choose $a_0$ via ε-greedy from $Q(s_0,\cdot)$<br>
+    &nbsp;&nbsp;<span style="color:var(--muted)">4.</span> <span style="color:var(--accent)">For</span> each step $t$:<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">5.</span> Execute $a_t$; observe $r_t$, $s_{t+1}$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">6.</span> Choose $a_{t+1}$ via ε-greedy from $Q(s_{t+1},\cdot)$ <span style="color:var(--accent3)">← key! choose BEFORE update</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">7.</span> $Q(s_t,a_t) \leftarrow Q(s_t,a_t) + \alpha[r_t + \gamma Q(s_{t+1},a_{t+1}) - Q(s_t,a_t)]$<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--muted)">8.</span> $s_t \leftarrow s_{t+1}$, $a_t \leftarrow a_{t+1}$
+  </div>
+
+  <h3>The Critical Difference — Side by Side</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
+    <div class="box box-blue" style="margin:0">
+      <strong>Q-Learning Target</strong>
+      $$r + \gamma \max_{a'} Q(s', a')$$
+      <span style="font-size:.85rem;">Always uses the <b>best possible</b> next action. Off-policy, optimistic, aggressive.</span>
+    </div>
+    <div class="box box-green" style="margin:0">
+      <strong>SARSA Target</strong>
+      $$r + \gamma Q(s', a')$$
+      <span style="font-size:.85rem;">Uses the action <b>actually taken</b> next. On-policy, conservative, exploration-aware.</span>
+    </div>
+  </div>
+
+  <h3>Full Comparison Table</h3>
+  <table class="cmp-table">
+    <tr><th>Property</th><th>Q-Learning / DQN</th><th>SARSA</th></tr>
+    <tr><td>Policy type</td><td>Off-policy</td><td>On-policy</td></tr>
+    <tr><td>Update target</td><td>$\max_{a'} Q(s',a')$</td><td>$Q(s', a')$ (actual $a'$)</td></tr>
+    <tr><td>Behavior</td><td>Can be ε-greedy while learning greedy</td><td>Must follow same ε-greedy policy</td></tr>
+    <tr><td>Safety</td><td>More aggressive, can be risky</td><td>Safer, avoids risky paths</td></tr>
+    <tr><td>Exploration</td><td>Ignores own exploration in target</td><td>Accounts for own exploration</td></tr>
+    <tr><td>Best for</td><td>Deterministic envs, maximize reward</td><td>Stochastic/risky envs, safe RL</td></tr>
+    <tr><td>Data reuse</td><td>Can reuse old transitions (replay)</td><td>Cannot easily use replay</td></tr>
+    <tr><td>Convergence</td><td>Converges to $Q^*$ (optimal)</td><td>Converges to $Q^\pi$ (policy-dependent)</td></tr>
+  </table>
+
+  <div class="box box-gold">
+    <strong>🧭 Cliff-Walking Intuition</strong>
+    Imagine a cliff: optimal path runs near the edge, but random exploration might fall off. Q-Learning learns to walk the cliff edge (optimal but risky). SARSA learns to take the safer inland path — because it accounts for the chance it will accidentally fall off due to ε-greedy exploration. SARSA is <b>safer in practice</b> but potentially suboptimal.
+  </div>
+
+  <h3>When to Use Which?</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">🎯</div><h3>Use DQN/Q-Learning when...</h3><p>Large state spaces (pixels). Want maximum reward. Can afford to be bold. Need experience replay.</p></div>
+    <div class="card"><div class="icon">🛡️</div><h3>Use SARSA when...</h3><p>Stochastic environment. Safety matters. Limited compute. Want guaranteed on-policy behavior.</p></div>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Quick Check</h4>
+    <p style="margin-bottom:12px">In SARSA, why is the algorithm called "on-policy"?</p>
+    <div class="quiz-options" id="q7-opts">
+      <button class="quiz-opt" onclick="checkQ('q7',this,false)">It always uses the greedy policy for updates</button>
+      <button class="quiz-opt" onclick="checkQ('q7',this,true)">The update uses the action the agent actually takes, not the hypothetical best action</button>
+      <button class="quiz-opt" onclick="checkQ('q7',this,false)">It stores past transitions in a replay buffer</button>
+      <button class="quiz-opt" onclick="checkQ('q7',this,false)">It converges faster than Q-learning</button>
+    </div>
+    <div class="quiz-feedback" id="q7-fb"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('dqn')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('atari')">Next: Atari &amp; Future →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE 8: ATARI & FUTURE ═══════════════ -->
+<div id="atari" class="page">
+  <h2>🕹️ Atari Case Study &amp; Future Directions</h2>
+
+  <div class="box box-blue">
+    <strong>The Benchmark that Changed Everything</strong>
+    Mnih et al. (2015) at DeepMind published "Human-level control through deep reinforcement learning" in Nature — showing a single DQN agent achieving superhuman performance on 49 Atari games from raw pixels.
+  </div>
+
+  <h3>Atari as an MDP</h3>
+  <table class="cmp-table">
+    <tr><th>MDP Component</th><th>Atari Formulation</th></tr>
+    <tr><td>State $s_t$</td><td>Stack of 4 consecutive $84 \times 84$ grayscale frames (captures velocity/motion)</td></tr>
+    <tr><td>Action space $\mathcal{A}$</td><td>Joystick controls: 4–18 discrete actions (varies per game)</td></tr>
+    <tr><td>Reward $r_t$</td><td>Change in game score at each step (clipped to $[-1, +1]$)</td></tr>
+    <tr><td>Terminal state</td><td>Game over (all lives lost)</td></tr>
+    <tr><td>Preprocessing</td><td>Grayscale, downsample, stack 4 frames, clip rewards</td></tr>
+  </table>
+
+  <h3>DQN Architecture for Atari</h3>
+  <div style="background:var(--surface2);border-radius:10px;padding:20px;margin:16px 0;border:1px solid var(--border);">
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:.9rem;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(88,166,255,.2);border-radius:6px;padding:8px 14px;min-width:160px;text-align:center;color:var(--accent);font-weight:600;">Input: 84×84×4</div>
+        <div style="color:var(--muted);">4 stacked grayscale frames</div>
+      </div>
+      <div style="color:var(--muted);margin-left:72px;">↓</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(210,168,255,.2);border-radius:6px;padding:8px 14px;min-width:160px;text-align:center;color:var(--accent4);font-weight:600;">Conv1: 16 × 8×8, stride 4</div>
+        <div style="color:var(--muted);">Detect large features (edges, shapes)</div>
+      </div>
+      <div style="color:var(--muted);margin-left:72px;">↓ ReLU</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(210,168,255,.2);border-radius:6px;padding:8px 14px;min-width:160px;text-align:center;color:var(--accent4);font-weight:600;">Conv2: 32 × 4×4, stride 2</div>
+        <div style="color:var(--muted);">Detect finer patterns</div>
+      </div>
+      <div style="color:var(--muted);margin-left:72px;">↓ ReLU → Flatten</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(63,185,80,.2);border-radius:6px;padding:8px 14px;min-width:160px;text-align:center;color:var(--accent3);font-weight:600;">FC: 256 units</div>
+        <div style="color:var(--muted);">High-level feature combination</div>
+      </div>
+      <div style="color:var(--muted);margin-left:72px;">↓ ReLU</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(227,179,65,.2);border-radius:6px;padding:8px 14px;min-width:160px;text-align:center;color:var(--gold);font-weight:600;">Output: N Q-values</div>
+        <div style="color:var(--muted);">One per action (N = 4 to 18)</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Key Results</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">🏆</div><h3>Superhuman on 29/49 Games</h3><p>Single architecture, same hyperparameters — beat expert humans on 29 Atari games.</p></div>
+    <div class="card"><div class="icon">🎮</div><h3>Raw Pixels → Actions</h3><p>No hand-crafted features. Pure end-to-end learning from pixels to Q-values.</p></div>
+    <div class="card"><div class="icon">🔁</div><h3>Replay Buffer: 1M</h3><p>Stored 1 million transitions, sampled uniformly at random for training.</p></div>
+    <div class="card"><div class="icon">⏱️</div><h3>Target Update: Every 10K Steps</h3><p>Target network synchronized with training network every 10,000 gradient steps.</p></div>
+  </div>
+
+  <h3>Summary: Q-Learning → DQN Evolution</h3>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-year">1989</div>
+      <div class="tl-title">Q-Learning (Watkins)</div>
+      <div class="tl-desc">Tabular, model-free, off-policy value learning. Proved convergence to Q*.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">1992</div>
+      <div class="tl-title">TD-Gammon</div>
+      <div class="tl-desc">Neural TD learning for backgammon — first major success with function approximation.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2013</div>
+      <div class="tl-title">DQN (Mnih et al., NIPS)</div>
+      <div class="tl-desc">Experience replay + deep CNN. First deep RL success on Atari.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2015</div>
+      <div class="tl-title">DQN + Target Network (Nature)</div>
+      <div class="tl-desc">Added frozen target network → superhuman on 29 Atari games. The landmark paper.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2016</div>
+      <div class="tl-title">Double DQN, Dueling DQN, Prioritized Replay</div>
+      <div class="tl-desc">Addressed overestimation bias, architecture improvements, smarter experience sampling.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2017+</div>
+      <div class="tl-title">Rainbow, Distributional RL, Safe RL</div>
+      <div class="tl-desc">Combined all DQN improvements; modeled full return distribution; risk-aware learning.</div>
+    </div>
+  </div>
+
+  <h3>Future Directions</h3>
+  <div class="card-grid">
+    <div class="card"><div class="icon">🎲</div><h3>Dueling DQN</h3><p>Separate network heads for state value $V(s)$ and advantage $A(s,a)$. Better value estimation.</p></div>
+    <div class="card"><div class="icon">⚡</div><h3>Prioritized Experience Replay</h3><p>Sample transitions proportional to their TD error — learn more from surprising experiences.</p></div>
+    <div class="card"><div class="icon">📊</div><h3>Distributional RL</h3><p>Learn the full distribution of returns $Z(s,a)$, not just the mean $Q(s,a)$. Better uncertainty.</p></div>
+    <div class="card"><div class="icon">🛡️</div><h3>Safe RL</h3><p>Add constraints on behavior — don't harm humans, stay within budget. Critical for real-world.</p></div>
+    <div class="card"><div class="icon">🌈</div><h3>Rainbow DQN</h3><p>Combined 6 DQN improvements into one agent. State of the art on Atari (2017).</p></div>
+    <div class="card"><div class="icon">🤖</div><h3>Model-Based RL</h3><p>Learn a world model, plan inside it. Much more sample-efficient. MuZero (2020).</p></div>
+  </div>
+
+  <div class="box box-gold">
+    <strong>🧭 Algorithm Selection Guide</strong>
+    <table class="cmp-table" style="margin-top:8px">
+      <tr><th>Situation</th><th>Recommended Algorithm</th></tr>
+      <tr><td>Stochastic, risky environment</td><td>SARSA</td></tr>
+      <tr><td>Maximize reward, less concern for safety</td><td>Q-Learning</td></tr>
+      <tr><td>Large / continuous state space (e.g. pixels)</td><td>DQN</td></tr>
+      <tr><td>Limited compute, simple environment</td><td>Tabular SARSA or Q-Learning</td></tr>
+      <tr><td>Overestimation of Q-values observed</td><td>Double DQN</td></tr>
+      <tr><td>Sparse rewards, need data efficiency</td><td>Prioritized Experience Replay</td></tr>
+    </table>
+  </div>
+
+  <div class="quiz-box">
+    <h4>🎯 Final Quiz</h4>
+    <p style="margin-bottom:12px">Why does DQN stack 4 consecutive frames as the state, instead of using just 1 frame?</p>
+    <div class="quiz-options" id="q8-opts">
+      <button class="quiz-opt" onclick="checkQ('q8',this,false)">To reduce the dimensionality of the input</button>
+      <button class="quiz-opt" onclick="checkQ('q8',this,false)">To apply data augmentation</button>
+      <button class="quiz-opt" onclick="checkQ('q8',this,true)">To encode velocity and motion information — a single frame is insufficient for Markov property</button>
+      <button class="quiz-opt" onclick="checkQ('q8',this,false)">To match the number of convolutional filters</button>
+    </div>
+    <div class="quiz-feedback" id="q8-fb"></div>
+  </div>
+
+  <div class="box box-purple" style="margin-top:32px;">
+    <strong>🎉 You've Covered Everything!</strong>
+    Lectures 1 &amp; 2 fully covered: RL fundamentals, MDPs, Policy &amp; Value functions, Bellman equations, Q-Learning, DQN (experience replay, target network), Double DQN, SARSA vs Q-Learning, on/off-policy, Atari case study, and future directions.
+  </div>
+
+  <div class="btn-row" style="margin-top:32px;">
+    <button class="btn btn-outline" onclick="goPage('sarsa')">← Previous</button>
+    <button class="btn btn-primary" onclick="goPage('home')">🏠 Back to Home</button>
+  </div>
+</div>
+
+<footer>
+  KAUST Academy · Reinforcement Learning · Lectures 1 &amp; 2 · Interactive Study Guide
+</footer>
+
+<script>
+// ── PAGE NAVIGATION ──
+const visited = new Set();
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(id)) b.classList.add('active');
+  });
+  window.scrollTo(0,0);
+  visited.add(id);
+  updateProgress();
+  if (id === 'dqn') drawNN();
+  if (id === 'policy-value') drawValueGrids();
+  if (window.MathJax) MathJax.typesetPromise();
+}
+
+function updateProgress() {
+  const pages = ['what-is-rl','mdp','policy-value','bellman','qlearning','dqn','sarsa','atari'];
+  const count = pages.filter(p => visited.has(p)).length;
+  const pct = Math.round(count / pages.length * 100);
+  document.getElementById('overall-progress').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = count + ' of 8 topics visited';
+}
+
+// ── TABS ──
+function switchTab(btn, panelId) {
+  const container = btn.closest('.page') || document.body;
+  const allBtns = btn.parentElement.querySelectorAll('.tab');
+  const allPanels = btn.closest('.page').querySelectorAll('.tab-panel');
+  allBtns.forEach(b => b.classList.remove('active'));
+  allPanels.forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.add('active');
+}
+
+// ── ACCORDION ──
+function toggleAcc(btn) {
+  btn.classList.toggle('open');
+  const body = btn.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ── QUIZ ──
+const correctMsg = ['✅ Correct! Well done.', '🎉 That\'s right!', '✅ Exactly! Great thinking.', '🎯 Spot on!'];
+const wrongMsg   = ['❌ Not quite. Think again.', '❌ Close, but not right.', '❌ Try re-reading the section.'];
+function checkQ(qid, btn, isCorrect) {
+  const opts = document.querySelectorAll(`#${qid}-opts .quiz-opt`);
+  opts.forEach(o => { o.disabled = true; o.style.cursor = 'default'; });
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+  const fb = document.getElementById(`${qid}-fb`);
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'ok' : 'bad');
+  fb.textContent = isCorrect ? correctMsg[Math.floor(Math.random()*correctMsg.length)] : wrongMsg[Math.floor(Math.random()*wrongMsg.length)];
+}
+
+// ── EPSILON VIZ ──
+function updateEpsViz() {
+  const val = document.getElementById('eps-slider').value / 100;
+  document.getElementById('eps-val').textContent = val.toFixed(2);
+  const viz = document.getElementById('eps-viz');
+  viz.innerHTML = '';
+  for (let i = 0; i < 40; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = `flex:1;border-radius:3px;background:${i/40 < val ? 'var(--accent2)' : 'var(--accent3)'};opacity:0.8;`;
+    viz.appendChild(d);
+  }
+  const pct = Math.round(val * 100);
+  document.getElementById('eps-desc').textContent =
+    pct === 0 ? 'Fully greedy — always exploit, never explore.' :
+    pct < 20  ? `${pct}% random exploration, ${100-pct}% greedy exploitation. Mostly exploiting.` :
+    pct < 50  ? `${pct}% random, ${100-pct}% greedy. Balanced learning.` :
+    pct < 80  ? `${pct}% random, ${100-pct}% greedy. Heavy exploration — early training.` :
+                `${pct}% random! Nearly random. Agent barely exploits its knowledge.`;
+}
+updateEpsViz();
+
+// ── GRID WORLD ──
+const GW_SIZE = 4;
+const GW_GOAL = 15;    // bottom-right
+const GW_TRAPS = [5, 11];
+const GW_WALLS = [10];
+let gwPos = 0, gwSteps = 0, gwReward = 0;
+
+function gwCellType(i) {
+  if (i === GW_GOAL) return 'goal';
+  if (GW_TRAPS.includes(i)) return 'trap';
+  if (GW_WALLS.includes(i)) return 'wall';
+  return 'empty';
+}
+
+function gwRender() {
+  const grid = document.getElementById('gridworld');
+  grid.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    let icon = '';
+    if (i === gwPos) { c.classList.add('agent'); icon = '🤖'; }
+    else if (i === GW_GOAL) { c.classList.add('goal'); icon = '🏆'; }
+    else if (GW_TRAPS.includes(i)) { c.classList.add('trap'); icon = '💥'; }
+    else if (GW_WALLS.includes(i)) { c.classList.add('wall'); icon = '🧱'; }
+    c.textContent = icon;
+    grid.appendChild(c);
+  }
+  document.getElementById('gw-info').textContent = `Step: ${gwSteps} | Cumulative Reward: ${gwReward}`;
+}
+
+function gwMove(dir) {
+  if (gwPos === GW_GOAL || GW_TRAPS.includes(gwPos)) return;
+  const row = Math.floor(gwPos / GW_SIZE), col = gwPos % GW_SIZE;
+  let nr = row, nc = col;
+  if (dir === 'up') nr--;
+  if (dir === 'down') nr++;
+  if (dir === 'left') nc--;
+  if (dir === 'right') nc++;
+  if (nr < 0 || nr >= GW_SIZE || nc < 0 || nc >= GW_SIZE) {
+    logGW('Hit a wall — stayed put. Reward: -0.1');
+    gwReward = +(gwReward - 0.1).toFixed(1); gwSteps++;
+    gwRender(); return;
+  }
+  const next = nr * GW_SIZE + nc;
+  if (GW_WALLS.includes(next)) { logGW('Wall! Can\'t go there. Reward: -0.1'); gwReward = +(gwReward - 0.1).toFixed(1); gwSteps++; gwRender(); return; }
+  gwPos = next; gwSteps++;
+  let r = -0.04;
+  let msg = `Moved ${dir} → cell ${gwPos}. Reward: -0.04`;
+  if (gwPos === GW_GOAL) { r = +1; msg = '🏆 Reached the goal! Reward: +1! Episode done.'; }
+  else if (GW_TRAPS.includes(gwPos)) { r = -1; msg = '💥 Fell in a trap! Reward: -1. Episode done.'; }
+  gwReward = +(gwReward + r).toFixed(2);
+  logGW(msg); gwRender();
+}
+
+function gwReset() { gwPos = 0; gwSteps = 0; gwReward = 0; document.getElementById('gw-log').textContent = ''; gwRender(); }
+function logGW(msg) { const l = document.getElementById('gw-log'); l.textContent += msg + '\n'; l.scrollTop = l.scrollHeight; }
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('mdp').classList.contains('active')) {
+    const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+    if (map[e.key]) { e.preventDefault(); gwMove(map[e.key]); }
+  }
+});
+
+gwRender();
+
+// ── VALUE GRIDS ──
+function drawValueGrids() {
+  const randomVals = [0.1, 0.2, 0.05, 0.3, 0.15, 0.1, 0.25, 0.4, 0.08, 0.35, 0, 0.2, 0.5, 0.6, 0.7, 1.0];
+  const optVals    = [0.62, 0.74, 0.85, 0.96, 0.51, 0.64, 0.77, 0, 0.39, 0.52, 0, 0.89, 0, 0.70, 0.86, 1.0];
+  const optPolicy  = ['→','→','→','↓','↑','↑','↑','↓','↑',null,'↑','↓',null,'→','→','G'];
+
+  ['vf-random','vf-optimal'].forEach((id, idx) => {
+    const cont = document.getElementById(id);
+    if (!cont) return;
+    cont.innerHTML = '';
+    cont.style.cssText = 'display:grid;grid-template-columns:repeat(4,52px);gap:3px;';
+    const vals = idx === 0 ? randomVals : optVals;
+    for (let i = 0; i < 16; i++) {
+      const c = document.createElement('div');
+      const isWall = GW_WALLS.includes(i);
+      const isTrap = GW_TRAPS.includes(i);
+      const isGoal = i === GW_GOAL;
+      let bg = isWall ? '#30363d' : isTrap ? 'rgba(247,129,102,.3)' : isGoal ? 'rgba(63,185,80,.3)' : `rgba(88,166,255,${vals[i] * 0.6})`;
+      let txt = isWall ? '🧱' : isTrap ? '💥' : isGoal ? '🏆' : (idx === 1 && optPolicy[i] ? `<div style="font-size:1.1rem">${optPolicy[i]}</div><div style="font-size:.6rem;color:var(--muted)">${vals[i].toFixed(2)}</div>` : vals[i].toFixed(2));
+      c.innerHTML = txt;
+      c.style.cssText = `width:52px;height:52px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:.7rem;font-weight:600;border:1px solid var(--border);background:${bg};`;
+      cont.appendChild(c);
+    }
+  });
+}
+
+// ── NEURAL NET VIZ ──
+function drawNN() {
+  const canvas = document.getElementById('nn-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const layers = [
+    { label: 'Pixels\n84×84×4', nodes: 4, color: '#58a6ff' },
+    { label: 'Conv1\n16 filt', nodes: 5, color: '#d2a8ff' },
+    { label: 'Conv2\n32 filt', nodes: 5, color: '#d2a8ff' },
+    { label: 'FC-256', nodes: 4, color: '#3fb950' },
+    { label: 'Q-values\nN actions', nodes: 3, color: '#e3b341' }
+  ];
+
+  const xStep = W / (layers.length + 1);
+  const layerPositions = layers.map((l, i) => {
+    const x = xStep * (i + 1);
+    const nodeSpacing = Math.min(30, (H - 60) / (l.nodes));
+    const startY = H/2 - (l.nodes-1) * nodeSpacing / 2;
+    const ys = Array.from({length: l.nodes}, (_, j) => startY + j * nodeSpacing);
+    return { x, ys, ...l };
+  });
+
+  // Draw connections
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < layerPositions.length - 1; i++) {
+    const from = layerPositions[i], to = layerPositions[i+1];
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = 1;
+    from.ys.forEach(y1 => to.ys.forEach(y2 => {
+      ctx.beginPath(); ctx.moveTo(from.x, y1); ctx.lineTo(to.x, y2); ctx.stroke();
+    }));
+  }
+  ctx.globalAlpha = 1;
+
+  // Draw nodes and labels
+  layerPositions.forEach(l => {
+    l.ys.forEach(y => {
+      ctx.beginPath(); ctx.arc(l.x, y, 10, 0, Math.PI*2);
+      ctx.fillStyle = l.color + '33'; ctx.fill();
+      ctx.strokeStyle = l.color; ctx.lineWidth = 2; ctx.stroke();
+    });
+    ctx.fillStyle = '#8b949e'; ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    l.label.split('\n').forEach((line, j) => ctx.fillText(line, l.x, H - 14 + j*12));
+  });
+}
+
+// Initialize
+if (document.getElementById('mdp').classList.contains('active')) gwRender();
+</script>
+</body>
+</html>
